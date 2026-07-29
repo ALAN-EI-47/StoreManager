@@ -7,6 +7,7 @@ namespace StoreManager.Api.Data;
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Users> Users => Set<Users>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
