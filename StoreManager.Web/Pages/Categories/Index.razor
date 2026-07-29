@@ -87,6 +87,7 @@
         }
     }
 
+
     private async Task DeleteAsync(Category category)
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
@@ -96,7 +97,7 @@
 
         if (confirmed != true)
         {
-            return;
+            return;//test
         }
 
         try
