@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using StoreManager.Api.Data;
+using StoreManager.Api.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,11 +17,43 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
 });
 
+
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    context.Database.Migrate(); // ensures schema/migrations are applied, if you use migrations
+
+    if (!context.Users.Any())
+    {
+        context.Users.AddRange(
+            new Users
+            {
+                Name = "Admin User",
+                Email = "admin@storemanager.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
+                Role = "admin",
+                CreatedAt = DateTime.Now
+            },
+            new Users
+            {
+                Name = "Cashier User",
+                Email = "cashier@storemanager.com",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("cashier123"),
+                Role = "cashier",
+                CreatedAt = DateTime.Now
+            }
+        );
+
+        context.SaveChanges();
+    }
+}
 
 using (var scope = app.Services.CreateScope())
 {

@@ -3,6 +3,7 @@
 @inject CategoryService CategoryService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
+@inject AuthService AuthService
 
 <PageTitle>@Title · StoreManager</PageTitle>
 
@@ -57,6 +58,15 @@ else
 
     private bool IsEdit => Id.HasValue;
     private string Title => IsEdit ? "Edit category" : "New category";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await AuthService.GetCurrentUserAsync();
+        if (user is null || user.Role != "admin")
+        {
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+    }
 
     protected override async Task OnParametersSetAsync()
     {

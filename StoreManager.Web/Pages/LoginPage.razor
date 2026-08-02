@@ -1,0 +1,81 @@
+﻿@page "/login"
+@using System.ComponentModel.DataAnnotations
+@inject AuthService AuthService
+@inject NavigationManager Navigation
+
+<PageTitle>Login · StoreManager</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+    <MudCard Elevation="3">
+        <MudCardContent>
+            <MudText Typo="Typo.h4" Class="mb-1" Align="Align.Center">StoreManager</MudText>
+            <MudText Typo="Typo.body2" Class="mud-text-secondary mb-6" Align="Align.Center">
+                Sign in to continue
+            </MudText>
+
+            <EditForm Model="_model" OnValidSubmit="SubmitAsync">
+                <DataAnnotationsValidator />
+
+                <MudTextField @bind-Value="_model.Email" For="@(() => _model.Email)"
+                              Label="Email" Variant="Variant.Outlined" Immediate="true"
+                              Class="mb-4" />
+
+                <MudTextField @bind-Value="_model.Password" For="@(() => _model.Password)"
+                              Label="Password" Variant="Variant.Outlined" Immediate="true"
+                              InputType="InputType.Password"
+                              Class="mb-4" />
+
+                @if (_error is not null)
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+                }
+
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled"
+                           Color="Color.Primary" FullWidth="true"
+                           Disabled="_loading">
+                    @(_loading ? "Signing in…" : "Sign in")
+                </MudButton>
+            </EditForm>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private LoginModel _model = new();
+    private bool _loading;
+    private string? _error;
+
+    private async Task SubmitAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var success = await AuthService.LoginAsync(_model.Email, _model.Password);
+
+            if (success)
+            {
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                _error = "Invalid email or password";
+            }
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Enter a valid email")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required")]
+        public string Password { get; set; } = string.Empty;
+    }
+}

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.8.12021.73 stable
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StoreManager.Api", "StoreManager.Api\StoreManager.Api.csproj", "{75B625F9-D31A-4A32-946D-4C77CA685053}"
 EndProject
@@ -12,9 +12,6 @@ Global
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{75B625F9-D31A-4A32-946D-4C77CA685053}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{75B625F9-D31A-4A32-946D-4C77CA685053}.Debug|Any CPU.Build.0 = Debug|Any CPU
@@ -24,5 +21,11 @@ Global
 		{64A45542-898D-4329-93AD-B57B0E1552C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64A45542-898D-4329-93AD-B57B0E1552C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64A45542-898D-4329-93AD-B57B0E1552C4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C4DC4BD7-A132-4938-B105-33AC6D774CE5}
 	EndGlobalSection
 EndGlobal

@@ -3,6 +3,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
+@inject AuthService AuthService
 
 <PageTitle>Categories · StoreManager</PageTitle>
 
@@ -66,7 +67,17 @@
     private bool _loading = true;
     private string? _error;
 
-    protected override async Task OnInitializedAsync() => await LoadAsync();
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await AuthService.GetCurrentUserAsync();
+        if (user is null || user.Role != "admin")
+        {
+            Navigation.NavigateTo("/", forceLoad: true);
+            return;
+        }
+
+        await LoadAsync();
+    }
 
     private async Task LoadAsync()
     {

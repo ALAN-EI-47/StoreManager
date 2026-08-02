@@ -14,6 +14,9 @@ builder.Services.AddScoped(_ => new HttpClient
     BaseAddress = new Uri(apiBaseUrl.TrimEnd('/') + "/")
 });
 
+builder.Services.AddScoped<AuthService>();
+
+
 builder.Services.AddScoped<CategoryService>();
 
 builder.Services.AddMudServices();

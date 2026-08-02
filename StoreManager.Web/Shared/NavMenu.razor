@@ -1,8 +1,57 @@
+@inject AuthService AuthService
+@implements IDisposable
+
 <MudNavMenu>
-    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
-        Dashboard
-    </MudNavLink>
-    <MudNavLink Href="categories" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">
-        Categories
-    </MudNavLink>
+    @if (_loading)
+    {
+        <MudNavLink Disabled="true">Loading…</MudNavLink>
+    }
+    else if (_currentUser is null)
+    {
+        <MudNavLink Href="login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Login">
+            Login
+        </MudNavLink>
+    }
+    else if (_currentUser.Role == "admin")
+    {
+        <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
+            Dashboard
+        </MudNavLink>
+        <MudNavLink Href="categories" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">
+            Categories
+        </MudNavLink>
+        <MudNavLink Href="pos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PointOfSale">
+            Point of Sale
+        </MudNavLink>
+    }
+    else if (_currentUser.Role == "cashier")
+    {
+        <MudNavLink Href="pos" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PointOfSale">
+            Point of Sale
+        </MudNavLink>
+    }
 </MudNavMenu>
+
+@code {
+    private UserDto? _currentUser;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthService.OnChange += HandleAuthStateChanged;
+
+        _currentUser = await AuthService.GetCurrentUserAsync();
+        _loading = false;
+    }
+
+    private async void HandleAuthStateChanged()
+    {
+        _currentUser = await AuthService.GetCurrentUserAsync();
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        AuthService.OnChange -= HandleAuthStateChanged;
+    }
+}
