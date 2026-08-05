@@ -1,0 +1,154 @@
+﻿@page "/products/new"
+@page "/products/{Id:int}/edit"
+@inject ProductService ProductService
+@inject CategoryService CategoryService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>@Title · StoreManager</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-4">
+    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="Cancel" />
+    <MudText Typo="Typo.h4">@Title</MudText>
+</MudStack>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_notFound)
+{
+    <MudAlert Severity="Severity.Warning">
+        Product @Id was not found.
+        <MudLink Href="products">Back to products</MudLink>
+    </MudAlert>
+}
+else
+{
+    <MudCard Elevation="2" Style="max-width:640px">
+        <EditForm Model="_model" OnValidSubmit="SubmitAsync">
+            <DataAnnotationsValidator />
+            <MudCardContent>
+                <MudSelect T="int" @bind-Value="_model.CategoryId" For="@(() => _model.CategoryId)"
+                           Label="Category" Variant="Variant.Outlined" Class="mb-4">
+                    @foreach (var category in _categories)
+                    {
+                        <MudSelectItem T="int" Value="@category.Id">@category.Name</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <MudTextField @bind-Value="_model.Name" For="@(() => _model.Name)"
+                              Label="Name" Variant="Variant.Outlined" Immediate="true"
+                              Class="mb-4" />
+
+                <MudTextField @bind-Value="_model.Barcode" For="@(() => _model.Barcode)"
+                              Label="Barcode" Variant="Variant.Outlined" Immediate="true"
+                              Class="mb-4" />
+
+                <MudSelect T="string" @bind-Value="_model.Unit" For="@(() => _model.Unit)"
+                           Label="Unit" Variant="Variant.Outlined" Class="mb-4">
+                    <MudSelectItem T="string" Value="@("piece")">Piece</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("kg")">Kg</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("box")">Box</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("liter")">Liter</MudSelectItem>
+                </MudSelect>
+
+                <MudNumericField @bind-Value="_model.CostPrice" For="@(() => _model.CostPrice)"
+                                 Label="Cost Price" Variant="Variant.Outlined" Format="F2"
+                                 Class="mb-4" />
+
+                <MudNumericField @bind-Value="_model.SellingPrice" For="@(() => _model.SellingPrice)"
+                                 Label="Selling Price" Variant="Variant.Outlined" Format="F2"
+                                 Class="mb-4" />
+
+                <MudNumericField @bind-Value="_model.StockQuantity" For="@(() => _model.StockQuantity)"
+                                 Label="Stock Quantity" Variant="Variant.Outlined" Min="0" />
+            </MudCardContent>
+            <MudCardActions Class="px-4 pb-4">
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled"
+                           Color="Color.Primary" Disabled="_saving"
+                           StartIcon="@Icons.Material.Filled.Save">
+                    @(_saving ? "Saving…" : "Save")
+                </MudButton>
+                <MudButton OnClick="Cancel" Variant="Variant.Text" Class="ml-2">Cancel</MudButton>
+            </MudCardActions>
+        </EditForm>
+    </MudCard>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private Product _model = new();
+    private List<Category> _categories = new();
+    private bool _loading;
+    private bool _saving;
+    private bool _notFound;
+
+    private bool IsEdit => Id.HasValue;
+    private string Title => IsEdit ? "Edit product" : "New product";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _categories = await CategoryService.GetAllAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (IsEdit)
+        {
+            _loading = true;
+            try
+            {
+                var product = await ProductService.GetByIdAsync(Id!.Value);
+                if (product is null)
+                {
+                    _notFound = true;
+                }
+                else
+                {
+                    _model = product;
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Could not load product: {ex.Message}", Severity.Error);
+                _notFound = true;
+            }
+            finally
+            {
+                _loading = false;
+            }
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        _saving = true;
+        try
+        {
+            if (IsEdit)
+            {
+                await ProductService.UpdateAsync(_model);
+                Snackbar.Add($"Saved \"{_model.Name}\".", Severity.Success);
+            }
+            else
+            {
+                await ProductService.CreateAsync(_model);
+                Snackbar.Add($"Created \"{_model.Name}\".", Severity.Success);
+            }
+
+            Navigation.NavigateTo("products");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Save failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel() => Navigation.NavigateTo("products");
+}

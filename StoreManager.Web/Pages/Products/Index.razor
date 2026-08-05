@@ -1,0 +1,140 @@
+﻿@page "/products"
+@inject ProductService ProductService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Products · StoreManager</PageTitle>
+
+<MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="mb-4">
+    <MudText Typo="Typo.h4">Products</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => Navigation.NavigateTo("products/new"))">
+        New Product
+    </MudButton>
+</MudStack>
+
+@if (_error is not null)
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4"
+              ContentAlignment="HorizontalAlignment.Left">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width:100%">
+            <span>@_error</span>
+            <MudButton Color="Color.Inherit" Size="Size.Small" OnClick="LoadAsync">Retry</MudButton>
+        </MudStack>
+    </MudAlert>
+}
+
+<MudTable Items="_products" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="2"
+          Loading="_loading" LoadingProgressColor="Color.Primary">
+    <HeaderContent>
+        <MudTh>Name</MudTh>
+        <MudTh>Category</MudTh>
+        <MudTh>Unit</MudTh>
+        <MudTh Style="text-align:right">Selling Price</MudTh>
+        <MudTh Style="text-align:right">Stock Quantity</MudTh>
+        <MudTh Style="text-align:right">Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Name">
+            <MudText Typo="Typo.body1">@context.Name</MudText>
+        </MudTd>
+        <MudTd DataLabel="Category">
+            <MudText Typo="Typo.body2">@(context.Category?.Name ?? "—")</MudText>
+        </MudTd>
+        <MudTd DataLabel="Unit">
+            <MudText Typo="Typo.body2">@context.Unit</MudText>
+        </MudTd>
+        <MudTd DataLabel="Selling Price" Style="text-align:right">
+            @context.SellingPrice.ToString("C")
+        </MudTd>
+        <MudTd DataLabel="Stock Quantity" Style="text-align:right">
+            <MudChip T="string" Color="@GetStockColor(context.StockQuantity)" Size="Size.Small" Variant="Variant.Filled">
+                @context.StockQuantity
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Actions" Style="text-align:right">
+            <MudTooltip Text="Edit">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small"
+                               OnClick="@(() => Navigation.NavigateTo($"products/{context.Id}/edit"))" />
+            </MudTooltip>
+            <MudTooltip Text="Delete">
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
+                               OnClick="@(() => DeleteAsync(context))" />
+            </MudTooltip>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        @if (_error is null)
+        {
+            <MudText Class="my-4">No products yet. Click "New Product" to add the first one.</MudText>
+        }
+    </NoRecordsContent>
+</MudTable>
+
+@code {
+    private List<Product> _products = new();
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            _products = await ProductService.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = $"Could not load products. Is the API running? ({ex.Message})";
+            _products = new();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private Color GetStockColor(int quantity)
+    {
+        if (quantity == 0)
+        {
+            return Color.Error;
+        }
+
+        if (quantity <= 10)
+        {
+            return Color.Warning;
+        }
+
+        return Color.Success;
+    }
+
+    private async Task DeleteAsync(Product product)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete product",
+            $"Delete \"{product.Name}\"? This cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        try
+        {
+            await ProductService.DeleteAsync(product.Id);
+            _products.Remove(product);
+            Snackbar.Add($"Deleted \"{product.Name}\".", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Delete failed: {ex.Message}", Severity.Error);
+        }
+    }
+}
